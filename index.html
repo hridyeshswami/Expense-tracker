@@ -1,0 +1,1069 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Expense Tracker — All-in-One Student Finance (PBL Prototype)</title>
+    <!-- Google Fonts Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <!-- Navigation Header -->
+    <nav class="navbar">
+        <div class="container nav-inner">
+            <a href="#" class="brand">
+                <div class="brand-icon">🎓</div>
+                <span>Student Expense Tracker</span>
+                <span class="student-tag">All-in-One</span>
+            </a>
+
+            <div class="nav-links">
+                <button class="nav-link active" data-tab="dashboard-tab">📊 Dashboard</button>
+                <button class="nav-link" data-tab="transactions-tab">💳 Transactions</button>
+                <button class="nav-link" data-tab="budgets-tab">🎯 Budgets</button>
+                <button class="nav-link" data-tab="analytics-tab">📈 Analytics</button>
+                <button class="nav-link" data-tab="goals-tab">💰 Goals</button>
+                <button class="nav-link" data-tab="recurring-tab">🔁 Subscriptions</button>
+                <button class="nav-link" data-tab="database-tab">🗄️ Database</button>
+                <button class="nav-link" data-tab="settings-tab">⚙️ Settings</button>
+            </div>
+
+            <div class="nav-actions">
+                <!-- Admin Security Mode Toggle -->
+                <button id="adminToggleBtn" class="btn btn-sm btn-outline admin-unlocked" title="Admin Access Control">
+                    <span>👑</span> <strong>Admin Mode (Unlocked)</strong>
+                </button>
+                <button id="openAddIncomeBtn" class="btn btn-sm btn-outline" style="color:#10b981; border-color:#a7f3d0;">
+                    <span>+</span> Income
+                </button>
+                <button id="openAddExpenseBtn" class="btn btn-primary">
+                    <span>+</span> Quick Add
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Top Admin Status Banner -->
+    <div id="adminModeBanner" style="background:#fffbeb; border-bottom:1px solid #fde68a; padding:0.65rem 1rem; text-align:center; font-size:0.875rem; color:#92400e; display:flex; align-items:center; justify-content:center; gap:0.75rem; flex-wrap:wrap;">
+        <span id="adminBannerText">🔒 <strong>Viewer Mode (Read-Only)</strong>: All dummy data removed. Only the Admin can make changes.</span>
+        <button id="bannerAdminActionBtn" class="btn btn-sm btn-primary" style="padding:0.25rem 0.75rem; font-size:0.8rem;">👑 Admin Login</button>
+    </div>
+
+    <!-- Hero / PBL Banner -->
+    <header class="hero-banner">
+        <div class="container banner-content">
+            <div>
+                <h1 class="banner-title">
+                    <span>🎓</span> Student-Friendly Expense & Budget Tracker
+                </h1>
+                <p class="banner-subtitle">
+                    All-in-one student budgeting: Travel, Food, College, Stationery, Recharge, Shopping & more (Stored locally in Chrome).
+                </p>
+            </div>
+            <div style="display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center;">
+                <span class="banner-badge">🔒 Admin Controlled</span>
+                <span class="banner-badge">💾 Localhost / Chrome Storage</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="container" style="flex: 1;">
+
+        <!-- ========================================== -->
+        <!-- TAB 1: DASHBOARD -->
+        <!-- ========================================== -->
+        <section id="dashboard-tab" class="tab-pane active">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; flex-wrap:wrap; gap:0.5rem;">
+                <h2 style="font-size:1.25rem; font-weight:700;">Financial Overview</h2>
+                <div style="display:flex; gap:0.5rem;">
+                    <button id="progressiveToggleBtn" class="btn btn-sm btn-outline">✨ Beginner Minimal View</button>
+                </div>
+            </div>
+
+            <!-- Plain-Language Insights Panel (Slide 15) -->
+            <div class="insights-panel">
+                <div class="insights-header">
+                    <span class="insights-title">💡 Plain-Language Spending Insights</span>
+                    <span style="font-size:0.75rem; color:#64748b; font-weight:600;">AUTO-GENERATED</span>
+                </div>
+                <div id="insightsContainer" class="insights-grid">
+                    <!-- Populated dynamically via calculations.js -->
+                </div>
+            </div>
+
+            <!-- Slide 17 Recommended Dashboard 7 Stat Cards (Clean Initial State) -->
+            <div class="dashboard-grid">
+                <!-- 1. Total Balance -->
+                <div class="stat-card highlight">
+                    <div class="stat-header">
+                        <span class="stat-label">Total Balance</span>
+                        <div class="stat-icon">💰</div>
+                    </div>
+                    <div class="stat-value" id="statBalance">₹0</div>
+                    <div class="stat-meta">Current available student funds</div>
+                </div>
+
+                <!-- 2. Monthly Income -->
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <span class="stat-label">Monthly Income</span>
+                        <div class="stat-icon" style="color:#10b981;">📈</div>
+                    </div>
+                    <div class="stat-value" style="color:#10b981;" id="statIncome">₹0</div>
+                    <div class="stat-meta">Allowance + Stipends</div>
+                </div>
+
+                <!-- 3. Expenses -->
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <span class="stat-label">Expenses</span>
+                        <div class="stat-icon" style="color:#ef4444;">📉</div>
+                    </div>
+                    <div class="stat-value" style="color:#ef4444;" id="statExpense">₹0</div>
+                    <div class="stat-meta">Total spent this month</div>
+                </div>
+
+                <!-- 4. Budget Remaining -->
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <span class="stat-label">Budget Remaining</span>
+                        <div class="stat-icon" style="color:#0ea5e9;">🎯</div>
+                    </div>
+                    <div class="stat-value" id="statBudgetRemaining">₹0</div>
+                    <div class="stat-meta" id="statBudgetMeta">Set budget in Settings</div>
+                </div>
+
+                <!-- 5. Safe-to-Spend Daily Limit (Slide 6, 15, 17) -->
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <span class="stat-label">Safe Daily Limit</span>
+                        <span class="daily-limit-badge">⚡ Smart Limit</span>
+                    </div>
+                    <div class="stat-value" style="color:#4f46e5;" id="statDailyLimit">₹0/day</div>
+                    <div class="stat-meta" id="statDailyMeta">Safe spending recommendation</div>
+                </div>
+
+                <!-- 6. Top Category (Slide 17) -->
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <span class="stat-label">Top Category</span>
+                        <div class="stat-icon">🏷️</div>
+                    </div>
+                    <div class="stat-value" style="font-size:1.4rem;" id="statTopCategory">None yet</div>
+                    <div class="stat-meta" id="statTopCatMeta">No expenses logged yet</div>
+                </div>
+
+                <!-- 7. Active Savings Goal (Slide 17) -->
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <span class="stat-label" id="statGoalTitle">Savings Goal</span>
+                        <div class="stat-icon">🎯</div>
+                    </div>
+                    <div class="stat-value" style="font-size:1.3rem;" id="statGoalValue">₹0 / ₹0</div>
+                    <div class="progress-container">
+                        <div class="progress-bar progress-success" id="statGoalProgress" style="width: 0%;"></div>
+                    </div>
+                    <div class="stat-meta" id="statGoalMeta">No active goals set</div>
+                </div>
+            </div>
+
+            <!-- Advanced Collapsible Widgets Container -->
+            <div id="advancedDashboardWidgets">
+                <div class="card-box">
+                    <div class="card-box-header">
+                        <h3 class="card-box-title"><span>🕒</span> Recent Student Transactions</h3>
+                        <button class="btn btn-sm btn-outline" onclick="switchTab('transactions-tab')">View All</button>
+                    </div>
+                    <div class="table-wrapper">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Category</th>
+                                    <th>Note</th>
+                                    <th>Type & Method</th>
+                                    <th style="text-align:right;">Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recentTransactionsBody">
+                                <!-- Populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- TAB 2: TRANSACTIONS -->
+        <!-- ========================================== -->
+        <section id="transactions-tab" class="tab-pane">
+            <div class="card-box">
+                <div class="card-box-header">
+                    <h3 class="card-box-title"><span>💳</span> Student Transaction History</h3>
+                    <div style="display:flex; gap:0.5rem;">
+                        <button id="exportCsvBtn" class="btn btn-sm btn-outline">📥 Export CSV</button>
+                        <button class="btn btn-sm btn-outline" onclick="document.getElementById('openAddIncomeBtn').click()">+ Add Income</button>
+                        <button class="btn btn-sm btn-primary" onclick="document.getElementById('openAddExpenseBtn').click()">+ Add Expense</button>
+                    </div>
+                </div>
+
+                <!-- Filters Toolbar -->
+                <div class="toolbar">
+                    <input type="text" id="txSearchInput" class="form-control" placeholder="🔍 Search note or category..." style="min-width: 200px;">
+                    <div class="filter-group">
+                        <select id="txCatFilter" class="form-select">
+                            <option value="">All Categories</option>
+                        </select>
+                        <select id="txNeedFilter" class="form-select">
+                            <option value="">All (Need vs Want)</option>
+                            <option value="1">Needs Only (Essentials)</option>
+                            <option value="0">Wants Only (Discretionary)</option>
+                        </select>
+                        <select id="txMethodFilter" class="form-select">
+                            <option value="">All Payment Methods</option>
+                            <option value="UPI">UPI</option>
+                            <option value="Cash">Cash</option>
+                            <option value="Card">Card</option>
+                            <option value="Bank Transfer">Bank Transfer</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="table-wrapper">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Category</th>
+                                <th>Description / Note</th>
+                                <th>Classification</th>
+                                <th>Payment Method</th>
+                                <th>Amount</th>
+                                <th style="text-align:center;">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="fullTransactionsBody">
+                            <!-- Populated dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- TAB 3: BUDGETS & HEALTH -->
+        <!-- ========================================== -->
+        <section id="budgets-tab" class="tab-pane">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; flex-wrap:wrap; gap:0.5rem;">
+                <div>
+                    <h2 style="font-size:1.25rem; font-weight:700;">Monthly Category Budgets</h2>
+                    <p style="font-size:0.85rem; color:#64748b;">
+                        Category health status automatically tracks: 
+                        <span class="badge badge-success">Under Control (&lt;70%)</span>
+                        <span class="badge badge-warning">Getting Close (70-95%)</span>
+                        <span class="badge badge-danger">Exceeded (&gt;95%)</span>
+                    </p>
+                </div>
+                <button id="openSetBudgetBtn" class="btn btn-primary">+ Set Category Budget</button>
+            </div>
+
+            <div id="budgetCardsContainer" class="dashboard-grid">
+                <!-- Budget cards rendered dynamically -->
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- TAB 4: ANALYTICS & CHARTS -->
+        <!-- ========================================== -->
+        <section id="analytics-tab" class="tab-pane">
+            <div style="margin-bottom:1.25rem;">
+                <h2 style="font-size:1.25rem; font-weight:700;">Visual Financial Analytics</h2>
+                <p style="font-size:0.85rem; color:#64748b;">Interactive Chart.js breakdowns showing real student spending behavior.</p>
+            </div>
+
+            <div class="charts-grid">
+                <!-- Chart 1: Needs vs Wants -->
+                <div class="card-box">
+                    <div class="card-box-header">
+                        <h4 class="card-box-title"><span>⚖️</span> Need vs Want Ratio (Slide 15)</h4>
+                    </div>
+                    <div style="height: 260px; position: relative;">
+                        <canvas id="needsWantsChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Chart 2: Category Breakdown -->
+                <div class="card-box">
+                    <div class="card-box-header">
+                        <h4 class="card-box-title"><span>🍔</span> Expense by Student Category</h4>
+                    </div>
+                    <div style="height: 260px; position: relative;">
+                        <canvas id="categoryChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Chart 3: Payment Method Split -->
+                <div class="card-box">
+                    <div class="card-box-header">
+                        <h4 class="card-box-title"><span>📲</span> Payment Method Breakdown (UPI, Cash, Card)</h4>
+                    </div>
+                    <div style="height: 260px; position: relative;">
+                        <canvas id="paymentMethodChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Chart 4: Monthly Comparison -->
+                <div class="card-box">
+                    <div class="card-box-header">
+                        <h4 class="card-box-title"><span>📊</span> Month-over-Month Comparison (Slide 7, 14)</h4>
+                    </div>
+                    <div style="height: 260px; position: relative;">
+                        <canvas id="trendChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- TAB 5: SAVINGS GOALS -->
+        <!-- ========================================== -->
+        <section id="goals-tab" class="tab-pane">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; flex-wrap:wrap; gap:0.5rem;">
+                <div>
+                    <h2 style="font-size:1.25rem; font-weight:700;">Student Savings Goals</h2>
+                    <p style="font-size:0.85rem; color:#64748b;">Track long-term academic and personal targets (laptops, trips, certification fees).</p>
+                </div>
+                <button id="openAddGoalBtn" class="btn btn-primary">+ New Savings Goal</button>
+            </div>
+
+            <div id="goalsContainer" class="goal-cards-grid">
+                <!-- Goal cards rendered dynamically -->
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- TAB 6: RECURRING & SUBSCRIPTIONS -->
+        <!-- ========================================== -->
+        <section id="recurring-tab" class="tab-pane">
+            <div class="card-box">
+                <div class="card-box-header">
+                    <div>
+                        <h3 class="card-box-title"><span>🔁</span> Recurring Expenses & Subscriptions (Slide 15)</h3>
+                        <p style="font-size:0.8rem; color:#64748b; margin-top:0.25rem;">Upcoming bill reminders for WiFi, mobile pack, bus passes, and subscriptions.</p>
+                    </div>
+                    <button id="openAddRecurringBtn" class="btn btn-primary">+ Add Subscription</button>
+                </div>
+
+                <div class="table-wrapper">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Subscription Title</th>
+                                <th>Category</th>
+                                <th>Frequency</th>
+                                <th>Payment Method</th>
+                                <th>Amount</th>
+                                <th>Next Due Date</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recurringTableBody">
+                            <!-- Populated dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- TAB 7: DATABASE & SQL SCHEMA VIEWER -->
+        <!-- ========================================== -->
+        <section id="database-tab" class="tab-pane">
+            <div id="databaseTabContent">
+                <!-- Database Overview Cards -->
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.25rem; flex-wrap:wrap; gap:0.5rem;">
+                    <div>
+                        <h2 style="font-size:1.25rem; font-weight:700;">🗄️ Relational Database Management</h2>
+                        <p style="font-size:0.85rem; color:#64748b;">Live inspection of MySQL & SQLite relational schemas, live table rows, SQL console & ER model.</p>
+                    </div>
+                    <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+                        <button id="dbExportSqlDumpBtn" class="btn btn-sm btn-primary">📥 Download Live .SQL Dump</button>
+                        <button id="toggleDdlViewBtn" class="btn btn-sm btn-outline">📜 View SQL DDL</button>
+                    </div>
+                </div>
+
+                <!-- Database Metrics Bar -->
+                <div class="dashboard-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); margin-bottom: 1.25rem;">
+                    <div class="stat-card" style="padding:1rem;">
+                        <span class="stat-label">Architecture</span>
+                        <div style="font-size:1.15rem; font-weight:700; color:#4f46e5; margin:0.25rem 0;">Relational (3NF)</div>
+                        <span class="stat-meta">InnoDB & SQLite Standard</span>
+                    </div>
+                    <div class="stat-card" style="padding:1rem;">
+                        <span class="stat-label">Relational Tables</span>
+                        <div style="font-size:1.15rem; font-weight:700; color:#0ea5e9; margin:0.25rem 0;">6 Tables</div>
+                        <span class="stat-meta">Foreign Key Constraints ON</span>
+                    </div>
+                    <div class="stat-card" style="padding:1rem;">
+                        <span class="stat-label">Database Engine</span>
+                        <div style="font-size:1.15rem; font-weight:700; color:#10b981; margin:0.25rem 0;">MySQL / MariaDB</div>
+                        <span class="stat-meta">XAMPP & phpMyAdmin Ready</span>
+                    </div>
+                    <div class="stat-card" style="padding:1rem;">
+                        <span class="stat-label">Live Active Rows</span>
+                        <div id="dbLiveRowCountBadge" style="font-size:1.15rem; font-weight:700; color:#f59e0b; margin:0.25rem 0;">0 records</div>
+                        <span class="stat-meta">Stored in Chrome localStorage</span>
+                    </div>
+                </div>
+
+                <!-- Table Selector Pills -->
+                <div class="toolbar" style="margin-bottom:1rem; gap:0.4rem;">
+                    <span style="font-size:0.8rem; font-weight:700; color:#64748b; margin-right:0.35rem;">SELECT TABLE:</span>
+                    <button class="btn btn-sm btn-outline db-table-pill active" data-table="transactions">
+                        💳 transactions (<span id="db-pill-count-transactions">0</span>)
+                    </button>
+                    <button class="btn btn-sm btn-outline db-table-pill" data-table="categories">
+                        🏷️ categories (<span id="db-pill-count-categories">10</span>)
+                    </button>
+                    <button class="btn btn-sm btn-outline db-table-pill" data-table="budgets">
+                        🎯 budgets (<span id="db-pill-count-budgets">0</span>)
+                    </button>
+                    <button class="btn btn-sm btn-outline db-table-pill" data-table="savings_goals">
+                        💰 savings_goals (<span id="db-pill-count-savings_goals">0</span>)
+                    </button>
+                    <button class="btn btn-sm btn-outline db-table-pill" data-table="recurring_expenses">
+                        🔁 recurring_expenses (<span id="db-pill-count-recurring_expenses">0</span>)
+                    </button>
+                    <button class="btn btn-sm btn-outline db-table-pill" data-table="users">
+                        👤 users (<span id="db-pill-count-users">1</span>)
+                    </button>
+                </div>
+
+                <!-- Collapsible DDL Code View -->
+                <div id="dbDdlContainer" style="display:none; margin-bottom:1.25rem;">
+                    <div class="card-box" style="background:#0f172a; color:#f8fafc; border:none;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem; border-bottom:1px solid #334155; padding-bottom:0.5rem;">
+                            <span style="font-size:0.85rem; font-family:monospace; color:#38bdf8;">SQL DDL Definition (MySQL / SQLite Compatible)</span>
+                            <span style="font-size:0.75rem; color:#94a3b8;">AUTO-GENERATED SCHEMA</span>
+                        </div>
+                        <pre style="margin:0; overflow-x:auto; font-size:0.825rem; font-family:Consolas, Monaco, monospace; color:#e2e8f0; line-height:1.5;"><code id="dbActiveTableDDL">-- DDL</code></pre>
+                    </div>
+                </div>
+
+                <!-- Active Table Live Rows & Schema Columns Split -->
+                <div class="card-box" style="margin-bottom:1.5rem;">
+                    <div class="card-box-header">
+                        <div>
+                            <h3 class="card-box-title" id="dbActiveTableTitle">Table: `transactions`</h3>
+                            <p id="dbActiveTableDesc" style="font-size:0.825rem; color:#64748b; margin-top:0.2rem;"></p>
+                        </div>
+                    </div>
+
+                    <!-- Live Relational Data Rows Table -->
+                    <h4 style="font-size:0.85rem; font-weight:700; color:#475569; margin-bottom:0.5rem; text-transform:uppercase; letter-spacing:0.5px;">Live Relational Data</h4>
+                    <div class="table-wrapper" style="max-height: 280px; overflow-y: auto; margin-bottom: 1.5rem; border:1px solid #e2e8f0; border-radius:8px;">
+                        <table class="table">
+                            <thead id="dbLiveDataThead">
+                                <!-- Dynamic headers -->
+                            </thead>
+                            <tbody id="dbLiveDataTbody">
+                                <!-- Dynamic live rows -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Schema Field Definitions Table -->
+                    <h4 style="font-size:0.85rem; font-weight:700; color:#475569; margin-bottom:0.5rem; text-transform:uppercase; letter-spacing:0.5px;">Table Column Dictionary (Schema)</h4>
+                    <div class="table-wrapper" style="border:1px solid #e2e8f0; border-radius:8px;">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Column Name</th>
+                                    <th>Data Type</th>
+                                    <th>Constraints</th>
+                                    <th>Field Description</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dbSchemaColumnsTbody">
+                                <!-- Dynamic columns -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Interactive SQL Console Simulator -->
+                <div class="card-box" style="margin-bottom:1.5rem;">
+                    <div class="card-box-header">
+                        <div>
+                            <h3 class="card-box-title"><span>💻</span> Interactive SQL Query Console</h3>
+                            <p style="font-size:0.8rem; color:#64748b; margin-top:0.25rem;">Execute custom SQL queries against the active relational tables for project viva demonstration.</p>
+                        </div>
+                    </div>
+
+                    <div style="display:flex; flex-direction:column; gap:0.75rem;">
+                        <div style="display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap;">
+                            <label style="font-size:0.825rem; font-weight:600; color:#475569;">Preset Queries:</label>
+                            <select id="sqlPresetQuerySelect" class="form-select" style="flex:1; min-width:260px;">
+                                <option value="">-- Choose a Preset Demonstration Query --</option>
+                                <option value="SELECT * FROM transactions;">1. View all recorded transactions (SELECT * FROM transactions)</option>
+                                <option value="SELECT * FROM transactions WHERE type = 'expense';">2. View only expenses (WHERE type = 'expense')</option>
+                                <option value="SELECT * FROM transactions WHERE is_need = 1;">3. View essential Needs (WHERE is_need = 1)</option>
+                                <option value="SELECT * FROM categories WHERE type = 'expense';">4. View student expense categories</option>
+                                <option value="SELECT category_id, SUM(amount) FROM transactions GROUP BY category_id;">5. Category expense totals (GROUP BY category)</option>
+                                <option value="SELECT * FROM budgets;">6. View monthly category budgets</option>
+                                <option value="SELECT * FROM savings_goals;">7. View student savings goals</option>
+                                <option value="SELECT * FROM recurring_expenses;">8. View recurring subscriptions</option>
+                            </select>
+                        </div>
+
+                        <div style="display:flex; gap:0.5rem;">
+                            <textarea id="sqlConsoleInput" class="form-control" style="font-family:Consolas, Monaco, monospace; font-size:0.9rem; height:70px; resize:vertical;" placeholder="SELECT * FROM transactions;">SELECT * FROM transactions;</textarea>
+                        </div>
+
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <span style="font-size:0.75rem; color:#94a3b8;">Supports SELECT queries with WHERE filters and GROUP BY aggregations.</span>
+                            <button id="runSqlQueryBtn" class="btn btn-primary" style="padding:0.45rem 1.25rem;">▶️ Run SQL Query</button>
+                        </div>
+
+                        <!-- Result Box -->
+                        <div id="sqlQueryResultBox" style="margin-top:0.5rem;"></div>
+                    </div>
+                </div>
+
+                <!-- Visual Entity-Relationship (ER) Architecture Box -->
+                <div class="card-box">
+                    <div class="card-box-header">
+                        <h3 class="card-box-title"><span>📐</span> Entity-Relationship (ER) Schema Model</h3>
+                        <span class="badge badge-primary">3rd Normal Form (3NF)</span>
+                    </div>
+
+                    <p style="font-size:0.85rem; color:#64748b; margin-bottom:1rem;">
+                        Normalized relational design ensuring referential integrity with cascading updates and zero data redundancy.
+                    </p>
+
+                    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap:1rem;">
+                        <div style="border:1px solid #cbd5e1; border-radius:8px; padding:0.85rem; background:#f8fafc;">
+                            <div style="font-weight:700; color:#4f46e5; border-bottom:1px solid #e2e8f0; padding-bottom:0.35rem; margin-bottom:0.5rem;">
+                                👤 users (Parent Entity)
+                            </div>
+                            <ul style="list-style:none; font-size:0.8rem; line-height:1.6; color:#334155;">
+                                <li>🔑 <strong>id</strong> (PK, INT)</li>
+                                <li>• name (VARCHAR)</li>
+                                <li>• email (UNIQUE VARCHAR)</li>
+                                <li>• password_hash (VARCHAR)</li>
+                                <li>• monthly_income (DECIMAL)</li>
+                                <li>• overall_budget (DECIMAL)</li>
+                            </ul>
+                        </div>
+
+                        <div style="border:1px solid #cbd5e1; border-radius:8px; padding:0.85rem; background:#f8fafc;">
+                            <div style="font-weight:700; color:#0ea5e9; border-bottom:1px solid #e2e8f0; padding-bottom:0.35rem; margin-bottom:0.5rem;">
+                                🏷️ categories (Lookup Entity)
+                            </div>
+                            <ul style="list-style:none; font-size:0.8rem; line-height:1.6; color:#334155;">
+                                <li>🔑 <strong>id</strong> (PK, INT)</li>
+                                <li>• name (VARCHAR)</li>
+                                <li>• type (ENUM: expense/income)</li>
+                                <li>• icon (VARCHAR)</li>
+                                <li>• color (VARCHAR)</li>
+                            </ul>
+                        </div>
+
+                        <div style="border:1px solid #cbd5e1; border-radius:8px; padding:0.85rem; background:#f8fafc;">
+                            <div style="font-weight:700; color:#10b981; border-bottom:1px solid #e2e8f0; padding-bottom:0.35rem; margin-bottom:0.5rem;">
+                                💳 transactions (Ledger Entity)
+                            </div>
+                            <ul style="list-style:none; font-size:0.8rem; line-height:1.6; color:#334155;">
+                                <li>🔑 <strong>id</strong> (PK, INT)</li>
+                                <li>🔗 <strong>user_id</strong> (FK → users.id)</li>
+                                <li>🔗 <strong>category_id</strong> (FK → categories.id)</li>
+                                <li>• amount (DECIMAL)</li>
+                                <li>• is_need (TINYINT: 1=Need, 0=Want)</li>
+                                <li>• payment_method (ENUM)</li>
+                                <li>• transaction_date (DATE)</li>
+                            </ul>
+                        </div>
+
+                        <div style="border:1px solid #cbd5e1; border-radius:8px; padding:0.85rem; background:#f8fafc;">
+                            <div style="font-weight:700; color:#f59e0b; border-bottom:1px solid #e2e8f0; padding-bottom:0.35rem; margin-bottom:0.5rem;">
+                                🎯 budgets (Allocation Entity)
+                            </div>
+                            <ul style="list-style:none; font-size:0.8rem; line-height:1.6; color:#334155;">
+                                <li>🔑 <strong>id</strong> (PK, INT)</li>
+                                <li>🔗 <strong>user_id</strong> (FK → users.id)</li>
+                                <li>🔗 <strong>category_id</strong> (FK → categories.id)</li>
+                                <li>• month_year (VARCHAR: YYYY-MM)</li>
+                                <li>• allocated_amount (DECIMAL)</li>
+                            </ul>
+                        </div>
+
+                        <div style="border:1px solid #cbd5e1; border-radius:8px; padding:0.85rem; background:#f8fafc;">
+                            <div style="font-weight:700; color:#8b5cf6; border-bottom:1px solid #e2e8f0; padding-bottom:0.35rem; margin-bottom:0.5rem;">
+                                💰 savings_goals (Entity)
+                            </div>
+                            <ul style="list-style:none; font-size:0.8rem; line-height:1.6; color:#334155;">
+                                <li>🔑 <strong>id</strong> (PK, INT)</li>
+                                <li>🔗 <strong>user_id</strong> (FK → users.id)</li>
+                                <li>• title (VARCHAR)</li>
+                                <li>• target_amount (DECIMAL)</li>
+                                <li>• current_amount (DECIMAL)</li>
+                                <li>• target_date (DATE)</li>
+                            </ul>
+                        </div>
+
+                        <div style="border:1px solid #cbd5e1; border-radius:8px; padding:0.85rem; background:#f8fafc;">
+                            <div style="font-weight:700; color:#ec4899; border-bottom:1px solid #e2e8f0; padding-bottom:0.35rem; margin-bottom:0.5rem;">
+                                🔁 recurring_expenses (Entity)
+                            </div>
+                            <ul style="list-style:none; font-size:0.8rem; line-height:1.6; color:#334155;">
+                                <li>🔑 <strong>id</strong> (PK, INT)</li>
+                                <li>🔗 <strong>user_id</strong> (FK → users.id)</li>
+                                <li>🔗 <strong>category_id</strong> (FK → categories.id)</li>
+                                <li>• amount (DECIMAL)</li>
+                                <li>• billing_cycle (ENUM)</li>
+                                <li>• next_due_date (DATE)</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- TAB 8: SETTINGS & ADMIN CONTROL PANEL -->
+        <!-- ========================================== -->
+        <section id="settings-tab" class="tab-pane">
+            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap:1.5rem;">
+                
+                <!-- Box 1: Student Budget Settings -->
+                <div class="card-box">
+                    <div class="card-box-header">
+                        <h3 class="card-box-title"><span>⚙️</span> Student Budget Configuration</h3>
+                    </div>
+
+                    <form id="settingsForm">
+                        <div class="form-group">
+                            <label class="form-label">Monthly Allowance / Expected Income (₹)</label>
+                            <input type="number" id="settingsIncome" class="form-control" style="width:100%;" placeholder="Enter monthly income amount" min="0">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Overall Monthly Spending Budget Limit (₹)</label>
+                            <input type="number" id="settingsBudget" class="form-control" style="width:100%;" placeholder="Enter spending budget limit" min="0">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Currency Symbol</label>
+                            <input type="text" id="settingsCurrency" class="form-control" style="width:100%;" value="₹" required>
+                        </div>
+
+                        <div class="form-group" style="display:flex; align-items:center; gap:0.75rem; margin-top:1rem;">
+                            <input type="checkbox" id="settingsStudentMode" checked style="width:18px; height:18px;">
+                            <label for="settingsStudentMode" style="font-size:0.875rem; font-weight:600; cursor:pointer;">
+                                Enable Student Mode
+                            </label>
+                        </div>
+
+                        <div style="margin-top:1.25rem;">
+                            <button type="submit" class="btn btn-primary" style="width:100%;">Save Budget Settings</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Box 2: Admin Security & Category Management (No Code Needed!) -->
+                <div class="card-box">
+                    <div class="card-box-header">
+                        <h3 class="card-box-title"><span>👑</span> Admin Control Panel</h3>
+                        <span class="badge badge-primary">No Code Changes</span>
+                    </div>
+
+                    <!-- Change Admin PIN -->
+                    <div style="margin-bottom:1.5rem; padding-bottom:1.25rem; border-bottom:1px solid #e2e8f0;">
+                        <h4 style="font-size:0.9rem; font-weight:700; margin-bottom:0.5rem;">Change Admin Security PIN</h4>
+                        <p style="font-size:0.8rem; color:#64748b; margin-bottom:0.75rem;">
+                            Current PIN: <code id="currentAdminPinDisplay" style="background:#eef2ff; color:#4f46e5; padding:2px 6px; border-radius:4px;">admin123</code>
+                        </p>
+                        <form id="changePinForm" style="display:flex; gap:0.5rem;">
+                            <input type="text" id="newAdminPin" class="form-control" placeholder="Enter new PIN" style="flex:1;" required minlength="4">
+                            <button type="submit" class="btn btn-sm btn-outline">Update PIN</button>
+                        </form>
+                    </div>
+
+                    <!-- Add Custom Category Without Code -->
+                    <div style="margin-bottom:1.5rem; padding-bottom:1.25rem; border-bottom:1px solid #e2e8f0;">
+                        <h4 style="font-size:0.9rem; font-weight:700; margin-bottom:0.5rem;">Add Custom Category</h4>
+                        <p style="font-size:0.8rem; color:#64748b; margin-bottom:0.75rem;">Create custom categories for your college without editing code.</p>
+                        <form id="addCategoryForm">
+                            <div style="display:grid; grid-template-columns: 2fr 1fr 1fr; gap:0.5rem; margin-bottom:0.5rem;">
+                                <input type="text" id="newCatName" class="form-control" placeholder="Category Name" required>
+                                <input type="text" id="newCatIcon" class="form-control" placeholder="Emoji (e.g. 💻)" value="🏷️">
+                                <select id="newCatType" class="form-select">
+                                    <option value="expense">Expense</option>
+                                    <option value="income">Income</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn btn-sm btn-primary" style="width:100%;">+ Add Category</button>
+                        </form>
+                        <!-- Existing Categories List -->
+                        <div style="margin-top:0.75rem;">
+                            <span style="font-size:0.75rem; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:0.5px;">Current Categories:</span>
+                            <div id="categoriesListSettings" style="display:flex; flex-direction:column; gap:0.35rem; margin-top:0.35rem; max-height:160px; overflow-y:auto; padding-right:4px;">
+                                <!-- Populated dynamically -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Data Backup, Restore & Wipe -->
+                    <div>
+                        <h4 style="font-size:0.9rem; font-weight:700; margin-bottom:0.5rem;">Chrome Local Storage Backup</h4>
+                        <p style="font-size:0.8rem; color:#64748b; margin-bottom:0.75rem;">Save your data to a JSON file or restore it anytime.</p>
+                        <div style="display:flex; gap:0.5rem; flex-wrap:wrap; margin-bottom:0.75rem;">
+                            <button id="exportBackupJsonBtn" class="btn btn-sm btn-outline" style="flex:1;">📤 Backup to JSON</button>
+                            <label class="btn btn-sm btn-outline" style="flex:1; cursor:pointer; text-align:center; margin-bottom:0;">
+                                📥 Restore JSON
+                                <input type="file" id="importBackupFileInput" accept=".json" style="display:none;">
+                            </label>
+                        </div>
+                        <button id="wipeAllDataBtn" class="btn btn-sm btn-outline" style="width:100%; color:#ef4444; border-color:#fca5a5;">
+                            🗑️ Wipe All Data (Start Fresh)
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+    </main>
+
+    <!-- ========================================== -->
+    <!-- MODAL 0: ADMIN AUTHENTICATION MODAL -->
+    <!-- ========================================== -->
+    <div id="adminAuthModal" class="modal-backdrop">
+        <div class="modal-content" style="max-width: 400px;">
+            <div class="modal-header">
+                <h3 class="modal-title">👑 Admin Authentication</h3>
+                <button id="closeAdminAuthModal" class="modal-close">&times;</button>
+            </div>
+            <form id="adminAuthForm">
+                <div class="modal-body">
+                    <p style="font-size:0.85rem; color:#64748b; margin-bottom:1rem;">
+                        Enter the Admin Security PIN to unlock full editing and management permissions.
+                    </p>
+                    <div class="form-group">
+                        <label class="form-label">Admin PIN</label>
+                        <input type="password" id="adminPinInput" class="form-control" style="width:100%; font-size:1.2rem; letter-spacing:2px; text-align:center;" placeholder="Enter PIN" required>
+                    </div>
+                    <p style="font-size:0.78rem; color:#94a3b8; text-align:center;">
+                        Default PIN is <code style="color:#4f46e5; font-weight:700;">admin123</code> (can be changed in Settings).
+                    </p>
+                    <div id="adminPinError" style="display:none; color:#ef4444; font-size:0.85rem; text-align:center; margin-top:0.5rem; font-weight:600;">
+                        ❌ Incorrect Admin PIN. Try again.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline" onclick="document.getElementById('adminAuthModal').classList.remove('active')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Unlock Permissions</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- MODAL 1: QUICK ADD EXPENSE (3-STEP FAST ENTRY) -->
+    <!-- ========================================== -->
+    <div id="addExpenseModal" class="modal-backdrop">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">⚡ Quick Add Expense</h3>
+                <button id="closeAddExpenseModal" class="modal-close">&times;</button>
+            </div>
+            <form id="addExpenseForm">
+                <div class="modal-body">
+                    <!-- Step 1: Amount -->
+                    <div class="form-group">
+                        <label class="form-label">Expense Amount (₹)</label>
+                        <input type="number" id="txAmount" class="form-control" style="width:100%; font-size:1.3rem; font-weight:700;" placeholder="e.g. 150" required min="1" step="any">
+                    </div>
+
+                    <!-- Step 2: Category -->
+                    <div class="form-group">
+                        <label class="form-label">Category</label>
+                        <select id="txCategorySelect" class="form-select" style="width:100%;" required>
+                            <!-- Populated dynamically -->
+                        </select>
+                    </div>
+
+                    <!-- Step 3: Need vs Want Classification -->
+                    <div class="form-group">
+                        <label class="form-label">Classification (Slide 15: Need vs Want)</label>
+                        <div class="pill-selector">
+                            <div class="pill-option">
+                                <input type="radio" id="needOpt1" name="txNeed" value="1" checked>
+                                <label for="needOpt1" class="pill-label">📌 Need (Essential)</label>
+                            </div>
+                            <div class="pill-option">
+                                <input type="radio" id="needOpt2" name="txNeed" value="0">
+                                <label for="needOpt2" class="pill-label">✨ Want (Discretionary)</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Payment Method (UPI, Cash, Card) -->
+                    <div class="form-group">
+                        <label class="form-label">Payment Method</label>
+                        <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap: 0.35rem;">
+                            <div class="pill-option">
+                                <input type="radio" id="pmUpi" name="txPaymentMethod" value="UPI" checked>
+                                <label for="pmUpi" class="pill-label" style="font-size:0.75rem; padding:0.4rem;">UPI</label>
+                            </div>
+                            <div class="pill-option">
+                                <input type="radio" id="pmCash" name="txPaymentMethod" value="Cash">
+                                <label for="pmCash" class="pill-label" style="font-size:0.75rem; padding:0.4rem;">Cash</label>
+                            </div>
+                            <div class="pill-option">
+                                <input type="radio" id="pmCard" name="txPaymentMethod" value="Card">
+                                <label for="pmCard" class="pill-label" style="font-size:0.75rem; padding:0.4rem;">Card</label>
+                            </div>
+                            <div class="pill-option">
+                                <input type="radio" id="pmBank" name="txPaymentMethod" value="Net Banking">
+                                <label for="pmBank" class="pill-label" style="font-size:0.75rem; padding:0.4rem;">NetBank</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Note / Item Description</label>
+                        <input type="text" id="txNote" class="form-control" style="width:100%;" placeholder="Enter expense note or description">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Transaction Date</label>
+                        <input type="date" id="txDate" class="form-control" style="width:100%;" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline" onclick="document.getElementById('addExpenseModal').classList.remove('active')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Expense</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- MODAL 1B: ADD INCOME -->
+    <!-- ========================================== -->
+    <div id="addIncomeModal" class="modal-backdrop">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">💰 Add Student Income / Allowance</h3>
+                <button id="closeAddIncomeModal" class="modal-close">&times;</button>
+            </div>
+            <form id="addIncomeForm">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label class="form-label">Income Amount (₹)</label>
+                        <input type="number" id="incAmount" class="form-control" style="width:100%; font-size:1.3rem; font-weight:700; color:#10b981;" placeholder="e.g. 5000" required min="1" step="any">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Source / Note</label>
+                        <input type="text" id="incNote" class="form-control" style="width:100%;" placeholder="e.g. Monthly Allowance from parents, Tutoring" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Payment Method</label>
+                        <select id="incPaymentMethod" class="form-select" style="width:100%;">
+                            <option value="Bank Transfer">Bank Transfer</option>
+                            <option value="UPI">UPI</option>
+                            <option value="Cash">Cash</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Date Received</label>
+                        <input type="date" id="incDate" class="form-control" style="width:100%;" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline" onclick="document.getElementById('addIncomeModal').classList.remove('active')">Cancel</button>
+                    <button type="submit" class="btn btn-success">Save Income</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- MODAL 2: SET CATEGORY BUDGET -->
+    <!-- ========================================== -->
+    <div id="setBudgetModal" class="modal-backdrop">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">🎯 Set Category Budget Limit</h3>
+                <button id="closeBudgetModal" class="modal-close">&times;</button>
+            </div>
+            <form id="setBudgetForm">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label class="form-label">Category</label>
+                        <select id="budgetCategorySelect" class="form-select" style="width:100%;" required>
+                            <!-- Options dynamically populated -->
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Monthly Spending Limit (₹)</label>
+                        <input type="number" id="budgetAmount" class="form-control" style="width:100%; font-size:1.2rem;" placeholder="e.g. 2500" required min="100">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline" onclick="document.getElementById('setBudgetModal').classList.remove('active')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Budget</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- MODAL 3: ADD SAVINGS GOAL -->
+    <!-- ========================================== -->
+    <div id="addGoalModal" class="modal-backdrop">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">💰 Create New Savings Goal</h3>
+                <button id="closeGoalModal" class="modal-close">&times;</button>
+            </div>
+            <form id="addGoalForm">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label class="form-label">Goal Title</label>
+                        <input type="text" id="goalTitle" class="form-control" style="width:100%;" placeholder="Enter savings goal title" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Target Amount (₹)</label>
+                        <input type="number" id="goalTarget" class="form-control" style="width:100%;" placeholder="Enter target amount" required min="100">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Initial Saved Amount (₹)</label>
+                        <input type="number" id="goalCurrent" class="form-control" style="width:100%;" placeholder="0" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Target Deadline Date</label>
+                        <input type="date" id="goalDate" class="form-control" style="width:100%;" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Emoji Icon</label>
+                        <input type="text" id="goalIcon" class="form-control" style="width:100%;" value="🎯">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline" onclick="document.getElementById('addGoalModal').classList.remove('active')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Create Goal</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- MODAL 4: DEPOSIT TO GOAL -->
+    <!-- ========================================== -->
+    <div id="depositModal" class="modal-backdrop">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Deposit to Savings Goal</h3>
+                <button id="closeDepositModal" class="modal-close">&times;</button>
+            </div>
+            <form id="depositForm">
+                <div class="modal-body">
+                    <input type="hidden" id="depositGoalId">
+                    <p style="margin-bottom:1rem; font-size:0.9rem; color:#64748b;">
+                        Adding savings toward: <strong id="depositGoalTitle" style="color:#0f172a;">Goal</strong>
+                    </p>
+                    <div class="form-group">
+                        <label class="form-label">Deposit Amount (₹)</label>
+                        <input type="number" id="depositAmount" class="form-control" style="width:100%; font-size:1.2rem;" placeholder="Enter amount to deposit" required min="1">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline" onclick="document.getElementById('depositModal').classList.remove('active')">Cancel</button>
+                    <button type="submit" class="btn btn-success">Confirm Deposit</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- MODAL 5: ADD RECURRING SUBSCRIPTION -->
+    <!-- ========================================== -->
+    <div id="addRecurringModal" class="modal-backdrop">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">🔁 Add Recurring Bill / Subscription</h3>
+                <button id="closeRecurringModal" class="modal-close">&times;</button>
+            </div>
+            <form id="addRecurringForm">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label class="form-label">Title</label>
+                        <input type="text" id="recTitle" class="form-control" style="width:100%;" placeholder="Enter bill or subscription title" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Category</label>
+                        <select id="recurringCategorySelect" class="form-select" style="width:100%;" required>
+                            <!-- Dynamically populated -->
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Amount (₹)</label>
+                        <input type="number" id="recAmount" class="form-control" style="width:100%;" placeholder="Enter recurring amount" required min="1">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Billing Cycle</label>
+                        <select id="recCycle" class="form-select" style="width:100%;">
+                            <option value="monthly">Monthly</option>
+                            <option value="quarterly">Quarterly</option>
+                            <option value="yearly">Yearly</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Next Due Date</label>
+                        <input type="date" id="recDueDate" class="form-control" style="width:100%;" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Payment Method</label>
+                        <select id="recPaymentMethod" class="form-select" style="width:100%;">
+                            <option value="UPI">UPI</option>
+                            <option value="Card">Card</option>
+                            <option value="Net Banking">Net Banking</option>
+                            <option value="Cash">Cash</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline" onclick="document.getElementById('addRecurringModal').classList.remove('active')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add Subscription</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container footer-inner">
+            <span>🎓 Prepared for College PBL Project Submission — Student Expense Tracker Prototype</span>
+            <span>All Data Stored Locally in Chrome (Zero Dummy Data)</span>
+        </div>
+    </footer>
+
+    <!-- Application Scripts -->
+    <script src="js/state.js"></script>
+    <script src="js/calculations.js"></script>
+    <script src="js/charts.js"></script>
+    <script src="js/database.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
