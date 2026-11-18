@@ -37,67 +37,80 @@ function updateDynamicMonthBadge() {
 }
 
 /**
- * Admin Security & Permission Checks
+ * User Authentication & Security UI Management
  */
-function updateAdminUI() {
-    const isAdmin = state.isAdmin();
-    const adminToggleBtn = document.getElementById('adminToggleBtn');
-    if (adminToggleBtn) {
-        if (isAdmin) {
-            adminToggleBtn.innerHTML = `<span>👑</span> <strong>Admin Mode (Unlocked)</strong>`;
-            adminToggleBtn.className = 'btn btn-sm btn-outline admin-unlocked';
-            adminToggleBtn.title = 'Click to Lock Prototype into Read-Only Mode';
-        } else {
-            adminToggleBtn.innerHTML = `<span>🔒</span> <strong>Read-Only (Admin Login)</strong>`;
-            adminToggleBtn.className = 'btn btn-sm btn-outline admin-locked';
-            adminToggleBtn.title = 'Click to Enter Admin PIN to make changes';
-        }
-    }
+function updateAuthUI() {
+    const user = state.getCurrentUser();
+    const loggedInNav = document.getElementById('navAuthLoggedIn');
+    const loggedOutNav = document.getElementById('navAuthLoggedOut');
+    const chipAvatar = document.getElementById('userChipAvatar');
+    const chipName = document.getElementById('userChipName');
+    const chipRole = document.getElementById('userChipRole');
 
-    // Top Admin Status Banner
-    const banner = document.getElementById('adminModeBanner');
-    const bannerText = document.getElementById('adminBannerText');
-    const bannerBtn = document.getElementById('bannerAdminActionBtn');
-    if (banner && bannerText && bannerBtn) {
-        if (isAdmin) {
-            banner.style.background = '#ecfdf5';
-            banner.style.borderColor = '#a7f3d0';
-            banner.style.color = '#065f46';
-            bannerText.innerHTML = `👑 <strong>Admin Mode Active</strong>: You have full permissions to add, edit, or delete transactions & budgets. Stored directly in Chrome.`;
-            bannerBtn.textContent = '🔒 Lock Mode';
-            bannerBtn.className = 'btn btn-sm btn-outline';
-            bannerBtn.style.color = '#065f46';
-            bannerBtn.style.borderColor = '#059669';
-        } else {
-            banner.style.background = '#fffbeb';
-            banner.style.borderColor = '#fde68a';
-            banner.style.color = '#92400e';
-            bannerText.innerHTML = `🔒 <strong>Viewer Mode (Read-Only)</strong>: All dummy data removed. Only the Admin can make changes or add data.`;
-            bannerBtn.textContent = '👑 Admin Login';
-            bannerBtn.className = 'btn btn-sm btn-primary';
-            bannerBtn.style.color = '#ffffff';
-            bannerBtn.style.borderColor = 'transparent';
+    if (user) {
+        if (loggedInNav) loggedInNav.style.display = 'flex';
+        if (loggedOutNav) loggedOutNav.style.display = 'none';
+        if (chipAvatar) chipAvatar.textContent = user.avatar || (user.role === 'admin' ? '👩‍🏫' : '👨‍🎓');
+        if (chipName) chipName.textContent = user.name || 'Student';
+        if (chipRole) {
+            chipRole.textContent = user.role === 'admin' ? 'Faculty Admin' : (user.title || 'Student');
+            chipRole.className = user.role === 'admin' ? 'badge badge-warning' : 'badge badge-primary';
         }
+    } else {
+        if (loggedInNav) loggedInNav.style.display = 'none';
+        if (loggedOutNav) loggedOutNav.style.display = 'flex';
     }
 
     const adminBadges = document.querySelectorAll('.admin-only-badge');
     adminBadges.forEach(el => {
-        el.style.display = isAdmin ? 'inline-flex' : 'none';
+        el.style.display = state.isAdmin() ? 'inline-flex' : 'none';
     });
 }
 
+function updateAdminUI() {
+    updateAuthUI();
+}
+
+function openAuthModal(tabId = 'signin-tab-content') {
+    const modal = document.getElementById('authModal');
+    if (!modal) return;
+
+    // Switch active tab button
+    document.querySelectorAll('.auth-tab-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.getAttribute('data-auth-tab') === tabId);
+    });
+
+    // Switch visible tab pane
+    document.querySelectorAll('.auth-tab-pane').forEach(pane => {
+        pane.style.display = pane.id === tabId ? 'block' : 'none';
+    });
+
+    // Reset error alerts
+    const loginErr = document.getElementById('loginErrorMsg');
+    if (loginErr) loginErr.style.display = 'none';
+    const signupErr = document.getElementById('signupErrorMsg');
+    if (signupErr) signupErr.style.display = 'none';
+    const adminErr = document.getElementById('adminPinError');
+    if (adminErr) adminErr.style.display = 'none';
+
+    modal.classList.add('active');
+}
+
 function checkAdminPermission(callback) {
+    if (state.isLoggedIn()) {
+        callback();
+    } else {
+        pendingAdminAction = callback;
+        openAuthModal('signin-tab-content');
+    }
+}
+
+function checkStrictAdminPermission(callback) {
     if (state.isAdmin()) {
         callback();
     } else {
         pendingAdminAction = callback;
-        const authModal = document.getElementById('adminAuthModal');
-        if (authModal) {
-            document.getElementById('adminPinInput').value = '';
-            document.getElementById('adminPinError').style.display = 'none';
-            authModal.classList.add('active');
-            setTimeout(() => document.getElementById('adminPinInput').focus(), 100);
-        }
+        openAuthModal('admin-tab-content');
     }
 }
 
@@ -561,66 +574,160 @@ function populateCategoryDropdowns() {
  * Modals & Forms setup
  */
 function setupModals() {
-    // Admin Toggle / Login
-    const adminToggleBtn = document.getElementById('adminToggleBtn');
-    const adminModal = document.getElementById('adminAuthModal');
-    const closeAdminModal = document.getElementById('closeAdminAuthModal');
+    // Navigation Authentication Buttons
+    const openLogin = document.getElementById('openLoginBtn');
+    const openSignup = document.getElementById('openSignupBtn');
+    const userChip = document.getElementById('navUserChip');
+    const logoutBtn = document.getElementById('navLogoutBtn');
+    const authModal = document.getElementById('authModal');
+    const closeAuth = document.getElementById('closeAuthModal');
 
-    if (adminToggleBtn) {
-        adminToggleBtn.addEventListener('click', () => {
-            if (state.isAdmin()) {
-                if (confirm('Lock Admin Mode? Prototype will switch to Read-Only mode for viewers.')) {
-                    state.lockAdmin();
-                    updateAdminUI();
-                    alert('Admin Mode locked. Viewers can now browse the dashboard safely without altering your data.');
-                }
-            } else {
-                document.getElementById('adminPinInput').value = '';
-                document.getElementById('adminPinError').style.display = 'none';
-                adminModal.classList.add('active');
-                setTimeout(() => document.getElementById('adminPinInput').focus(), 100);
-            }
+    if (openLogin) {
+        openLogin.addEventListener('click', () => openAuthModal('signin-tab-content'));
+    }
+    if (openSignup) {
+        openSignup.addEventListener('click', () => openAuthModal('signup-tab-content'));
+    }
+    if (userChip) {
+        userChip.addEventListener('click', () => openAuthModal('signin-tab-content'));
+    }
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', () => {
+            state.logoutUser();
+            updateAuthUI();
+            renderAllViews();
+            alert('You have logged out.');
         });
     }
+    if (closeAuth && authModal) {
+        closeAuth.addEventListener('click', () => authModal.classList.remove('active'));
+    }
 
-    const bannerAdminBtn = document.getElementById('bannerAdminActionBtn');
-    if (bannerAdminBtn) {
-        bannerAdminBtn.addEventListener('click', () => {
-            if (state.isAdmin()) {
-                if (confirm('Lock Admin Mode? Prototype will switch to Read-Only mode for viewers.')) {
-                    state.lockAdmin();
-                    updateAdminUI();
-                    alert('Admin Mode locked. Viewers can now browse the dashboard safely without altering your data.');
-                }
-            } else {
-                document.getElementById('adminPinInput').value = '';
-                document.getElementById('adminPinError').style.display = 'none';
-                adminModal.classList.add('active');
-                setTimeout(() => document.getElementById('adminPinInput').focus(), 100);
-            }
+    // Modal Tabs Navigation (Sign In / Sign Up / Admin)
+    document.querySelectorAll('.auth-tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const targetId = btn.getAttribute('data-auth-tab');
+            openAuthModal(targetId);
         });
-    }
+    });
 
-    if (closeAdminModal && adminModal) {
-        closeAdminModal.addEventListener('click', () => adminModal.classList.remove('active'));
-    }
-
-    const adminAuthForm = document.getElementById('adminAuthForm');
-    if (adminAuthForm) {
-        adminAuthForm.addEventListener('submit', (e) => {
+    // Student Login Form
+    const loginForm = document.getElementById('studentLoginForm');
+    if (loginForm) {
+        loginForm.addEventListener('submit', (e) => {
             e.preventDefault();
-            const pin = document.getElementById('adminPinInput').value;
-            if (state.unlockAdmin(pin)) {
-                adminModal.classList.remove('active');
-                updateAdminUI();
-                alert('👑 Admin Mode Unlocked! You now have full permission to add, edit, or delete data.');
+            const identifier = document.getElementById('loginIdentifier').value;
+            const password = document.getElementById('loginPassword').value;
+            const res = state.loginUser(identifier, password);
+            if (res.success) {
+                if (authModal) authModal.classList.remove('active');
+                updateAuthUI();
+                renderAllViews();
+                alert(res.message);
                 if (pendingAdminAction) {
                     const action = pendingAdminAction;
                     pendingAdminAction = null;
                     action();
                 }
             } else {
-                document.getElementById('adminPinError').style.display = 'block';
+                const err = document.getElementById('loginErrorMsg');
+                if (err) {
+                    err.textContent = `❌ ${res.message}`;
+                    err.style.display = 'block';
+                }
+            }
+        });
+    }
+
+    // Fast Demo Quick Logins
+    const demoStudentBtn = document.getElementById('demoStudentLoginBtn');
+    if (demoStudentBtn) {
+        demoStudentBtn.addEventListener('click', () => {
+            const res = state.loginUser('2025349734', 'password123');
+            if (res.success) {
+                if (authModal) authModal.classList.remove('active');
+                updateAuthUI();
+                renderAllViews();
+                alert('Logged in as Student: Hridyesh Swami (Lead Developer)');
+                if (pendingAdminAction) {
+                    const action = pendingAdminAction;
+                    pendingAdminAction = null;
+                    action();
+                }
+            }
+        });
+    }
+
+    const demoAdminBtn = document.getElementById('demoAdminLoginBtn');
+    if (demoAdminBtn) {
+        demoAdminBtn.addEventListener('click', () => {
+            const res = state.loginUser('ragini.kumari@sharda.ac.in', 'admin123');
+            if (res.success) {
+                if (authModal) authModal.classList.remove('active');
+                updateAuthUI();
+                renderAllViews();
+                alert('👑 Logged in as Faculty Supervisor: Ms. Ragini Kumari');
+                if (pendingAdminAction) {
+                    const action = pendingAdminAction;
+                    pendingAdminAction = null;
+                    action();
+                }
+            }
+        });
+    }
+
+    // Student Registration Form
+    const signupForm = document.getElementById('studentSignupForm');
+    if (signupForm) {
+        signupForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const name = document.getElementById('regName').value;
+            const system_id = document.getElementById('regSystemId').value;
+            const email = document.getElementById('regEmail').value;
+            const monthly_income = document.getElementById('regIncome').value;
+            const overall_budget = document.getElementById('regBudget').value;
+            const password = document.getElementById('regPassword').value;
+
+            const res = state.signupUser({ name, system_id, email, monthly_income, overall_budget, password });
+            if (res.success) {
+                if (authModal) authModal.classList.remove('active');
+                updateAuthUI();
+                renderAllViews();
+                alert(res.message);
+                if (pendingAdminAction) {
+                    const action = pendingAdminAction;
+                    pendingAdminAction = null;
+                    action();
+                }
+            } else {
+                const err = document.getElementById('signupErrorMsg');
+                if (err) {
+                    err.textContent = `❌ ${res.message}`;
+                    err.style.display = 'block';
+                }
+            }
+        });
+    }
+
+    // Faculty Admin Auth Form
+    const adminAuthForm = document.getElementById('adminAuthForm');
+    if (adminAuthForm) {
+        adminAuthForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const pin = document.getElementById('adminPinInput').value;
+            if (state.unlockAdmin(pin)) {
+                if (authModal) authModal.classList.remove('active');
+                updateAuthUI();
+                renderAllViews();
+                alert('👑 Faculty Admin Mode Unlocked! You now have full management permissions.');
+                if (pendingAdminAction) {
+                    const action = pendingAdminAction;
+                    pendingAdminAction = null;
+                    action();
+                }
+            } else {
+                const err = document.getElementById('adminPinError');
+                if (err) err.style.display = 'block';
             }
         });
     }
@@ -866,7 +973,7 @@ function setupEventListeners() {
                 profile.student_mode = document.getElementById('settingsStudentMode').checked;
 
                 state.saveProfile(profile);
-                alert('Budget settings saved directly into your Chrome local storage!');
+                alert('Budget settings saved successfully!');
                 renderAllViews();
             });
         });
@@ -877,7 +984,7 @@ function setupEventListeners() {
     if (changePinForm) {
         changePinForm.addEventListener('submit', (e) => {
             e.preventDefault();
-            checkAdminPermission(() => {
+            checkStrictAdminPermission(() => {
                 const newPin = document.getElementById('newAdminPin').value;
                 if (state.setAdminPin(newPin)) {
                     alert(`Admin PIN updated to: "${newPin}". Keep this PIN safe!`);
@@ -899,7 +1006,7 @@ function setupEventListeners() {
                 const type = document.getElementById('newCatType').value || 'expense';
 
                 state.addCategory({ name, icon, type, color: '#4f46e5' });
-                alert(`New Category "${name}" added to Chrome local storage without code changes!`);
+                alert(`New Category "${name}" added successfully!`);
                 addCategoryForm.reset();
                 populateCategoryDropdowns();
                 renderAllViews();
@@ -911,11 +1018,11 @@ function setupEventListeners() {
     const wipeDataBtn = document.getElementById('wipeAllDataBtn');
     if (wipeDataBtn) {
         wipeDataBtn.addEventListener('click', () => {
-            checkAdminPermission(() => {
-                if (confirm('Are you sure you want to wipe all transaction and budget data from your browser?')) {
+            checkStrictAdminPermission(() => {
+                if (confirm('Are you sure you want to reset all transaction and budget data back to clean state?')) {
                     state.wipeAllData();
                     renderAllViews();
-                    alert('All data wiped clean from Chrome local storage.');
+                    alert('All transaction and budget data has been reset.');
                 }
             });
         });
@@ -944,7 +1051,7 @@ function setupEventListeners() {
                 checkAdminPermission(() => {
                     const success = state.importBackupJSON(evt.target.result);
                     if (success) {
-                        alert('Backup successfully restored to Chrome local storage!');
+                        alert('Backup database successfully restored!');
                         populateCategoryDropdowns();
                         renderAllViews();
                     } else {

@@ -35,10 +35,28 @@
             </div>
 
             <div class="nav-actions">
-                <!-- Admin Security Mode Toggle -->
-                <button id="adminToggleBtn" class="btn btn-sm btn-outline admin-unlocked" title="Admin Access Control">
-                    <span>👑</span> <strong>Admin Mode (Unlocked)</strong>
-                </button>
+                <!-- Logged-out Auth buttons -->
+                <div id="navAuthLoggedOut" style="display:none; align-items:center; gap:0.4rem;">
+                    <button id="openLoginBtn" class="btn btn-sm btn-outline" style="border-color:#cbd5e1; font-weight:600;">
+                        <span>🔑</span> Sign In
+                    </button>
+                    <button id="openSignupBtn" class="btn btn-sm btn-primary" style="font-weight:600; padding:0.4rem 0.85rem;">
+                        <span>✨</span> Sign Up
+                    </button>
+                </div>
+
+                <!-- Logged-in User Profile Chip -->
+                <div id="navAuthLoggedIn" style="display:flex; align-items:center; gap:0.45rem;">
+                    <div id="navUserChip" class="user-chip" title="Click to view student profile & switch account">
+                        <span id="userChipAvatar" class="avatar">👨‍💻</span>
+                        <span id="userChipName" class="user-name">Hridyesh Swami</span>
+                        <span id="userChipRole" class="badge badge-primary" style="font-size:0.65rem; padding:1px 6px;">Student</span>
+                    </div>
+                    <button id="navLogoutBtn" class="btn btn-sm btn-outline" style="padding:0.35rem 0.65rem; color:#64748b; font-size:0.8rem;" title="Sign Out">
+                        <span>🚪</span> Logout
+                    </button>
+                </div>
+
                 <button id="openAddIncomeBtn" class="btn btn-sm btn-outline" style="color:#10b981; border-color:#a7f3d0;">
                     <span>+</span> Income
                 </button>
@@ -49,12 +67,6 @@
         </div>
     </nav>
 
-    <!-- Top Admin Status Banner -->
-    <div id="adminModeBanner" style="background:#fffbeb; border-bottom:1px solid #fde68a; padding:0.65rem 1rem; text-align:center; font-size:0.875rem; color:#92400e; display:flex; align-items:center; justify-content:center; gap:0.75rem; flex-wrap:wrap;">
-        <span id="adminBannerText">🔒 <strong>Viewer Mode (Read-Only)</strong>: All dummy data removed. Only the Admin can make changes.</span>
-        <button id="bannerAdminActionBtn" class="btn btn-sm btn-primary" style="padding:0.25rem 0.75rem; font-size:0.8rem;">👑 Admin Login</button>
-    </div>
-
     <!-- Hero / PBL Banner -->
     <header class="hero-banner">
         <div class="container banner-content">
@@ -63,12 +75,13 @@
                     <span>🎓</span> Student-Friendly Expense & Budget Tracker
                 </h1>
                 <p class="banner-subtitle">
-                    All-in-one student budgeting: Travel, Food, College, Stationery, Recharge, Shopping & more (Stored locally in Chrome).
+                    All-in-one personal finance companion for university students: track daily expenses, manage monthly budgets, and reach savings goals.
                 </p>
             </div>
             <div style="display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center;">
-                <span class="banner-badge">🔒 Admin Controlled</span>
-                <span class="banner-badge">💾 Localhost / Chrome Storage</span>
+                <span class="banner-badge" style="background:rgba(255,255,255,0.18); color:#ffffff;">✨ Smart Budgeting</span>
+                <span class="banner-badge" style="background:rgba(255,255,255,0.18); color:#ffffff;">📊 3NF Relational Model</span>
+                <span class="banner-badge" style="background:rgba(255,255,255,0.18); color:#ffffff;">🎯 Safe Daily Limits</span>
             </div>
         </div>
     </header>
@@ -724,7 +737,7 @@
 
                     <!-- Data Backup, Restore & Wipe -->
                     <div>
-                        <h4 style="font-size:0.9rem; font-weight:700; margin-bottom:0.5rem;">Chrome Local Storage Backup</h4>
+                        <h4 style="font-size:0.9rem; font-weight:700; margin-bottom:0.5rem;">Local Database Backup & Restore (JSON)</h4>
                         <p style="font-size:0.8rem; color:#64748b; margin-bottom:0.75rem;">Save your data to a JSON file or restore it anytime.</p>
                         <div style="display:flex; gap:0.5rem; flex-wrap:wrap; margin-bottom:0.75rem;">
                             <button id="exportBackupJsonBtn" class="btn btn-sm btn-outline" style="flex:1;">📤 Backup to JSON</button>
@@ -734,7 +747,7 @@
                             </label>
                         </div>
                         <button id="wipeAllDataBtn" class="btn btn-sm btn-outline" style="width:100%; color:#ef4444; border-color:#fca5a5;">
-                            🗑️ Wipe All Data (Start Fresh)
+                            🗑️ Reset Database (Start Fresh)
                         </button>
                     </div>
                 </div>
@@ -745,35 +758,132 @@
     </main>
 
     <!-- ========================================== -->
-    <!-- MODAL 0: ADMIN AUTHENTICATION MODAL -->
+    <!-- MODAL 0: STUDENT LOGIN & SIGN UP PORTAL -->
     <!-- ========================================== -->
-    <div id="adminAuthModal" class="modal-backdrop">
-        <div class="modal-content" style="max-width: 400px;">
-            <div class="modal-header">
-                <h3 class="modal-title">👑 Admin Authentication</h3>
-                <button id="closeAdminAuthModal" class="modal-close">&times;</button>
+    <div id="authModal" class="modal-backdrop">
+        <div class="modal-content" style="max-width: 440px;">
+            <div class="modal-header" style="border-bottom:none; padding-bottom:0.5rem;">
+                <div>
+                    <h3 class="modal-title" id="authModalTitle">🎓 Student Portal</h3>
+                    <p style="font-size:0.8rem; color:#64748b; margin-top:2px;">Student Personal Finance & Budgeting Account</p>
+                </div>
+                <button id="closeAuthModal" class="modal-close">&times;</button>
             </div>
-            <form id="adminAuthForm">
-                <div class="modal-body">
-                    <p style="font-size:0.85rem; color:#64748b; margin-bottom:1rem;">
-                        Enter the Admin Security PIN to unlock full editing and management permissions.
-                    </p>
-                    <div class="form-group">
-                        <label class="form-label">Admin PIN</label>
-                        <input type="password" id="adminPinInput" class="form-control" style="width:100%; font-size:1.2rem; letter-spacing:2px; text-align:center;" placeholder="Enter PIN" required>
-                    </div>
-                    <p style="font-size:0.78rem; color:#94a3b8; text-align:center;">
-                        Default PIN is <code style="color:#4f46e5; font-weight:700;">admin123</code> (can be changed in Settings).
-                    </p>
-                    <div id="adminPinError" style="display:none; color:#ef4444; font-size:0.85rem; text-align:center; margin-top:0.5rem; font-weight:600;">
-                        ❌ Incorrect Admin PIN. Try again.
+
+            <div class="modal-body" style="padding-top:0.5rem;">
+                <!-- Tab Selector: Sign In / Sign Up / Admin -->
+                <div class="auth-tabs-nav">
+                    <button type="button" class="auth-tab-btn active" id="tabBtnSignIn" data-auth-tab="signin-tab-content">🔑 Sign In</button>
+                    <button type="button" class="auth-tab-btn" id="tabBtnSignUp" data-auth-tab="signup-tab-content">✨ Sign Up</button>
+                    <button type="button" class="auth-tab-btn" id="tabBtnAdmin" data-auth-tab="admin-tab-content">👑 Admin</button>
+                </div>
+
+                <!-- TAB 1: SIGN IN -->
+                <div id="signin-tab-content" class="auth-tab-pane">
+                    <form id="studentLoginForm">
+                        <div class="form-group">
+                            <label class="form-label">Student ID or College Email</label>
+                            <input type="text" id="loginIdentifier" class="form-control" style="width:100%;" placeholder="e.g. 2025349734 or hridyeshswami@gmail.com" value="2025349734" required>
+                        </div>
+                        <div class="form-group">
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                <label class="form-label" style="margin-bottom:0;">Password</label>
+                                <span style="font-size:0.75rem; color:#94a3b8;">Demo pass: password123</span>
+                            </div>
+                            <input type="password" id="loginPassword" class="form-control" style="width:100%; margin-top:0.35rem;" placeholder="Enter password" value="password123" required>
+                        </div>
+
+                        <div id="loginErrorMsg" style="display:none; color:#ef4444; font-size:0.825rem; margin-bottom:0.75rem; font-weight:600; background:#fef2f2; padding:6px 10px; border-radius:6px; border:1px solid #fecaca;"></div>
+
+                        <button type="submit" class="btn btn-primary" style="width:100%; padding:0.65rem; font-weight:700;">
+                            Sign In to Student Account
+                        </button>
+                    </form>
+
+                    <!-- Fast Demo Switchers -->
+                    <div style="margin-top:1.25rem; border-top:1px solid #e2e8f0; padding-top:1rem;">
+                        <span style="font-size:0.72rem; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:0.5px; display:block; margin-bottom:0.5rem;">One-Click Quick Logins:</span>
+                        <div style="display:flex; flex-direction:column; gap:0.4rem;">
+                            <button type="button" class="demo-login-chip" id="demoStudentLoginBtn">
+                                <div>
+                                    <strong style="color:#0f172a;">👨‍💻 Hridyesh Swami</strong>
+                                    <div style="font-size:0.75rem; color:#64748b;">ID: 2025349734 • Lead Developer</div>
+                                </div>
+                                <span class="badge badge-primary">Student</span>
+                            </button>
+                            <button type="button" class="demo-login-chip" id="demoAdminLoginBtn">
+                                <div>
+                                    <strong style="color:#0f172a;">👩‍🏫 Ms. Ragini Kumari</strong>
+                                    <div style="font-size:0.75rem; color:#64748b;">Assistant Professor • Faculty Supervisor</div>
+                                </div>
+                                <span class="badge badge-warning">Admin</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-outline" onclick="document.getElementById('adminAuthModal').classList.remove('active')">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Unlock Permissions</button>
+
+                <!-- TAB 2: SIGN UP -->
+                <div id="signup-tab-content" class="auth-tab-pane" style="display:none;">
+                    <form id="studentSignupForm">
+                        <div class="form-group">
+                            <label class="form-label">Full Name</label>
+                            <input type="text" id="regName" class="form-control" style="width:100%;" placeholder="e.g. Hridyesh Swami" required>
+                        </div>
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.5rem;">
+                            <div class="form-group">
+                                <label class="form-label">System ID / Roll No</label>
+                                <input type="text" id="regSystemId" class="form-control" style="width:100%;" placeholder="e.g. 2025349734" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">College Email</label>
+                                <input type="email" id="regEmail" class="form-control" style="width:100%;" placeholder="e.g. student@sharda.ac.in" required>
+                            </div>
+                        </div>
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.5rem;">
+                            <div class="form-group">
+                                <label class="form-label">Monthly Allowance (₹)</label>
+                                <input type="number" id="regIncome" class="form-control" style="width:100%;" placeholder="e.g. 5000" min="0" value="5000" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Monthly Spending Cap (₹)</label>
+                                <input type="number" id="regBudget" class="form-control" style="width:100%;" placeholder="e.g. 4000" min="0" value="4000" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Create Password</label>
+                            <input type="password" id="regPassword" class="form-control" style="width:100%;" placeholder="Choose a secure password" minlength="4" required value="password123">
+                        </div>
+
+                        <div id="signupErrorMsg" style="display:none; color:#ef4444; font-size:0.825rem; margin-bottom:0.75rem; font-weight:600; background:#fef2f2; padding:6px 10px; border-radius:6px; border:1px solid #fecaca;"></div>
+
+                        <button type="submit" class="btn btn-primary" style="width:100%; padding:0.65rem; font-weight:700;">
+                            ✨ Create Student Account
+                        </button>
+                    </form>
                 </div>
-            </form>
+
+                <!-- TAB 3: ADMIN PORTAL -->
+                <div id="admin-tab-content" class="auth-tab-pane" style="display:none;">
+                    <form id="adminAuthForm">
+                        <p style="font-size:0.85rem; color:#64748b; margin-bottom:1rem; line-height:1.5;">
+                            Faculty Guide & System Evaluator portal. Enter the Admin PIN to access elevated permissions.
+                        </p>
+                        <div class="form-group">
+                            <label class="form-label">Admin Security PIN</label>
+                            <input type="password" id="adminPinInput" class="form-control" style="width:100%; font-size:1.25rem; letter-spacing:3px; text-align:center;" placeholder="Enter PIN" value="admin123" required>
+                        </div>
+                        <p style="font-size:0.78rem; color:#94a3b8; text-align:center; margin-bottom:1rem;">
+                            Default Faculty PIN: <code style="color:#4f46e5; font-weight:700; background:#eef2ff; padding:2px 6px; border-radius:4px;">admin123</code>
+                        </p>
+                        <div id="adminPinError" style="display:none; color:#ef4444; font-size:0.825rem; text-align:center; margin-bottom:0.75rem; font-weight:600; background:#fef2f2; padding:6px; border-radius:6px;">
+                            ❌ Incorrect Admin PIN. Try again.
+                        </div>
+                        <button type="submit" class="btn btn-primary" style="width:100%; padding:0.65rem; font-weight:700;">
+                            👑 Unlock Admin Permissions
+                        </button>
+                    </form>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -1054,8 +1164,8 @@
     <!-- Footer -->
     <footer class="footer">
         <div class="container footer-inner">
-            <span>🎓 Prepared for College PBL Project Submission — Student Expense Tracker Prototype</span>
-            <span>All Data Stored Locally in Chrome (Zero Dummy Data)</span>
+            <span>🎓 Prepared for College PBL Project Submission — Student Expense Tracker</span>
+            <span>🔒 Encrypted Client-Side Storage • Offline First</span>
         </div>
     </footer>
 

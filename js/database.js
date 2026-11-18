@@ -125,17 +125,17 @@ const dbEngine = {
         const profile = state.getProfile();
         switch (tableName) {
             case 'users':
-                return [{
-                    id: 1,
-                    name: profile.name || 'Student Admin',
-                    email: profile.email || 'admin@college.edu',
-                    password_hash: '$2y$10$wT7R1Q9e8oV8YjM2kR0C8.zT5Nfx6A8vE.Qp9Uq6Y3lR8Vf4XvG3W',
-                    monthly_income: profile.monthly_income || 0,
-                    overall_budget: profile.overall_budget || 0,
+                return state.getUsers().map((u, idx) => ({
+                    id: u.id || (idx + 1),
+                    name: u.name,
+                    email: u.email,
+                    password_hash: '$2y$10$e8wB6R3qXyZ1kM9vQp7T2.hGf5Uo8N9aB3vE.Qp9Uq6Y3lR8Vf4Xv',
+                    monthly_income: u.monthly_income || 0,
+                    overall_budget: u.overall_budget || 0,
                     currency_symbol: profile.currency_symbol || '₹',
-                    student_mode: profile.student_mode ? 1 : 0,
+                    student_mode: u.role === 'admin' ? 0 : 1,
                     created_at: '2026-09-01 10:00:00'
-                }];
+                }));
             case 'categories':
                 return state.getCategories().map(c => ({
                     id: c.id,

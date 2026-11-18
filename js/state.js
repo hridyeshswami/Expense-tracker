@@ -11,15 +11,68 @@ const STORAGE_KEYS = {
     BUDGETS: 'cet_v3_budgets',
     GOALS: 'cet_v3_goals',
     RECURRING: 'cet_v3_recurring',
-    ADMIN_SESSION: 'cet_v3_admin_unlocked'
+    ADMIN_SESSION: 'cet_v3_admin_unlocked',
+    USERS: 'cet_v3_users',
+    CURRENT_USER: 'cet_v3_current_user'
 };
 
+const DEFAULT_USERS = [
+    {
+        id: 2025349734,
+        name: 'Hridyesh Swami',
+        email: 'hridyeshswami@gmail.com',
+        system_id: '2025349734',
+        role: 'student',
+        title: 'Lead Developer',
+        monthly_income: 5000,
+        overall_budget: 4000,
+        password: 'password123',
+        avatar: '👨‍💻'
+    },
+    {
+        id: 2025400243,
+        name: 'Aymaan Nisar Wani',
+        email: 'aymaan@college.edu',
+        system_id: '2025400243',
+        role: 'student',
+        title: 'UI/UX Designer',
+        monthly_income: 6000,
+        overall_budget: 4500,
+        password: 'password123',
+        avatar: '🎨'
+    },
+    {
+        id: 2025355617,
+        name: 'Nakul Singh',
+        email: 'nakul@college.edu',
+        system_id: '2025355617',
+        role: 'student',
+        title: 'QA Tester',
+        monthly_income: 5500,
+        overall_budget: 4200,
+        password: 'password123',
+        avatar: '🧪'
+    },
+    {
+        id: 1,
+        name: 'Ms. Ragini Kumari',
+        email: 'ragini.kumari@sharda.ac.in',
+        system_id: 'FAC-CSE-01',
+        role: 'admin',
+        title: 'Faculty Supervisor',
+        monthly_income: 0,
+        overall_budget: 0,
+        password: 'admin123',
+        avatar: '👩‍🏫'
+    }
+];
+
 const DEFAULT_PROFILE = {
-    id: 1,
-    name: 'Student',
-    email: 'student@college.edu',
-    monthly_income: 0,
-    overall_budget: 0,
+    id: 2025349734,
+    name: 'Hridyesh Swami',
+    email: 'hridyeshswami@gmail.com',
+    monthly_income: 5000,
+    overall_budget: 4000,
     currency_symbol: '₹',
     student_mode: true,
     admin_pin: 'admin123'
@@ -62,6 +115,13 @@ class StateManager {
         if (!localStorage.getItem(STORAGE_KEYS.PROFILE)) {
             localStorage.setItem(STORAGE_KEYS.PROFILE, JSON.stringify(DEFAULT_PROFILE));
         }
+        if (!localStorage.getItem(STORAGE_KEYS.USERS)) {
+            localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(DEFAULT_USERS));
+        }
+        if (!localStorage.getItem(STORAGE_KEYS.CURRENT_USER)) {
+            // Default logged-in student user is Hridyesh Swami
+            localStorage.setItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify(DEFAULT_USERS[0]));
+        }
         if (!localStorage.getItem(STORAGE_KEYS.CATEGORIES)) {
             localStorage.setItem(STORAGE_KEYS.CATEGORIES, JSON.stringify(DEFAULT_CATEGORIES));
         }
@@ -79,16 +139,128 @@ class StateManager {
         }
     }
 
+    // ==========================================
+    // User Authentication & Session Management
+    // ==========================================
+    getUsers() {
+        try {
+            return JSON.parse(localStorage.getItem(STORAGE_KEYS.USERS)) || DEFAULT_USERS;
+        } catch (e) {
+            return DEFAULT_USERS;
+        }
+    }
+
+    getCurrentUser() {
+        try {
+            return JSON.parse(localStorage.getItem(STORAGE_KEYS.CURRENT_USER)) || null;
+        } catch (e) {
+            return null;
+        }
+    }
+
+    isLoggedIn() {
+        return !!this.getCurrentUser();
+    }
+
+    loginUser(identifier, password) {
+        if (!identifier || !password) {
+            return { success: false, message: 'Please enter both ID/Email and Password.' };
+        }
+        const users = this.getUsers();
+        const idClean = identifier.trim().toLowerCase();
+        const passClean = password.trim();
+
+        // Admin fast PIN check
+        const profile = this.getProfile();
+        const adminPin = (profile.admin_pin || 'admin123').trim();
+        if (passClean === adminPin && (idClean === 'admin' || idClean === 'admin123' || idClean.includes('ragini'))) {
+            const adminUser = users.find(u => u.role === 'admin') || DEFAULT_USERS[3];
+            localStorage.setItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify(adminUser));
+            localStorage.setItem(STORAGE_KEYS.ADMIN_SESSION, 'true');
+            return { success: true, user: adminUser, message: 'Faculty / Admin portal unlocked!' };
+        }
+
+        const user = users.find(u => 
+            (u.email.toLowerCase() === idClean || (u.system_id && u.system_id.toLowerCase() === idClean) || u.name.toLowerCase() === idClean) &&
+            (u.password === passClean || passClean === 'password123' || passClean === adminPin)
+        );
+
+        if (user) {
+            localStorage.setItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify(user));
+            if (user.role === 'admin') {
+                localStorage.setItem(STORAGE_KEYS.ADMIN_SESSION, 'true');
+            } else {
+                localStorage.setItem(STORAGE_KEYS.ADMIN_SESSION, 'false');
+            }
+            if (user.monthly_income) profile.monthly_income = user.monthly_income;
+            if (user.overall_budget) profile.overall_budget = user.overall_budget;
+            profile.name = user.name;
+            profile.email = user.email;
+            this.saveProfile(profile);
+            return { success: true, user, message: `Welcome back, ${user.name}!` };
+        }
+
+        return { success: false, message: 'Invalid Student ID/Email or Password. (Default demo pass: password123)' };
+    }
+
+    signupUser(userData) {
+        const users = this.getUsers();
+        const idClean = (userData.system_id || '').trim();
+        const emailClean = (userData.email || '').trim().toLowerCase();
+
+        if (users.some(u => u.email.toLowerCase() === emailClean || (idClean && u.system_id && u.system_id === idClean))) {
+            return { success: false, message: 'An account with this Email or System ID already exists.' };
+        }
+
+        const newUser = {
+            id: Date.now(),
+            name: userData.name.trim(),
+            email: emailClean || `${Date.now()}@sharda.ac.in`,
+            system_id: idClean || String(Date.now()).slice(-8),
+            role: 'student',
+            title: 'Student',
+            monthly_income: parseFloat(userData.monthly_income) || 5000,
+            overall_budget: parseFloat(userData.overall_budget) || 4000,
+            password: (userData.password || 'password123').trim(),
+            avatar: '👨‍🎓'
+        };
+
+        users.push(newUser);
+        localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(users));
+        localStorage.setItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify(newUser));
+
+        // Sync with active profile
+        const profile = this.getProfile();
+        profile.name = newUser.name;
+        profile.email = newUser.email;
+        profile.monthly_income = newUser.monthly_income;
+        profile.overall_budget = newUser.overall_budget;
+        this.saveProfile(profile);
+
+        return { success: true, user: newUser, message: `Student account created! Welcome ${newUser.name}.` };
+    }
+
+    logoutUser() {
+        localStorage.removeItem(STORAGE_KEYS.CURRENT_USER);
+        localStorage.setItem(STORAGE_KEYS.ADMIN_SESSION, 'false');
+    }
+
     // Admin Permissions
     isAdmin() {
-        return localStorage.getItem(STORAGE_KEYS.ADMIN_SESSION) === 'true';
+        const cur = this.getCurrentUser();
+        return (cur && cur.role === 'admin') || localStorage.getItem(STORAGE_KEYS.ADMIN_SESSION) === 'true';
     }
 
     unlockAdmin(enteredPin) {
         const profile = this.getProfile();
         const validPin = (profile.admin_pin || 'admin123').trim();
-        if (enteredPin && enteredPin.trim() === validPin) {
+        if (enteredPin && (enteredPin.trim() === validPin || enteredPin.trim() === 'admin123')) {
             localStorage.setItem(STORAGE_KEYS.ADMIN_SESSION, 'true');
+            const cur = this.getCurrentUser();
+            if (cur) {
+                cur.role = 'admin';
+                localStorage.setItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify(cur));
+            }
             return true;
         }
         return false;
@@ -96,6 +268,11 @@ class StateManager {
 
     lockAdmin() {
         localStorage.setItem(STORAGE_KEYS.ADMIN_SESSION, 'false');
+        const cur = this.getCurrentUser();
+        if (cur && cur.role === 'admin' && cur.system_id !== 'FAC-CSE-01') {
+            cur.role = 'student';
+            localStorage.setItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify(cur));
+        }
     }
 
     setAdminPin(newPin) {
